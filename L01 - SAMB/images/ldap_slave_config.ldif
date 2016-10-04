@@ -1,0 +1,47 @@
+# sudo ldapmodify -Y EXTERNAL -H ldapi:/// -f ldap_slave_config.ldif
+
+# Sync-Modul aktivieren
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: syncprov.la
+
+# fuege replikationsrelevante Attribute zum Index hinzu
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+add: olcDbIndex
+olcDbIndex: entryUUID,entryCSN eq
+
+# Datenbank-Replikation aktivieren
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+add: olcSyncrepl
+olcSyncrepl: {0}rid=2 provider=ldap://waldock
+  type=refreshOnly
+  bindmethod=simple
+  binddn="cn=syncagent,dc=4chit,dc=at"
+  credentials=123456
+  interval="00:00:03:00"
+  retry="30 10 300 +"
+  timeout=1
+  tls_reqcert=never
+  schemachecking=off
+  searchbase="dc=4chit,dc=at"
+
+# Konfigurationsreplikation aktivieren
+dn: olcDatabase={0}config,cn=config
+changetype: modify
+add: olcSyncrepl
+olcSyncrepl: {0}rid=1 provider=ldap://waldock
+  type=refreshOnly
+  bindmethod=simple
+  binddn="cn=syncagent,dc=4chit,dc=at"
+  credentials=123456
+  interval="00:00:03:00"
+  retry="30 10 300 +"
+  timeout=1
+  tls_reqcert=never
+  schemachecking=off
+  searchbase="cn=config"
+
+

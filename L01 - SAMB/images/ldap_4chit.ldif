@@ -1,0 +1,55 @@
+dn: ou=People,dc=4chit,dc=at
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=4chit,dc=at
+objectClass: organizationalUnit
+ou: Groups
+
+dn: uid=dsunaric,ou=People,dc=4chit,dc=at
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: dsunaric
+sn: Draggy
+givenName: Dragana
+cn: Dragana.Sunaric
+displayName: Dragana Sunaric
+uidNumber: 10000
+gidNumber: 5000
+userPassword: 123456
+gecos: dsunaric
+loginShell: /bin/bash
+homeDirectory: /home/dsunaric
+
+dn: uid=kwaldock,ou=People,dc=4chit,dc=at
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: kwaldock
+sn: Kevsoft
+givenName: Kevin
+cn: Kevin.Waldock
+displayName: Kevin Waldock
+uidNumber: 10000
+gidNumber: 5000
+userPassword: 123456
+gecos: kwaldock
+loginShell: /bin/bash
+homeDirectory: /home/kwaldock
+
+dn: uid=mzaher,ou=People,dc=4chit,dc=at
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: mzaher
+sn: Merna
+givenName: Merna
+cn: Merna.Zaher
+displayName: Merna Zaher
+uidNumber: 10000
+gidNumber: 5000
+userPassword: 123456
+gecos: mzaher
+loginShell: /bin/bash
+homeDirectory: /home/mzaher

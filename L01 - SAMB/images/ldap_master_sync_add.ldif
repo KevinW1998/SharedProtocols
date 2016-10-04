@@ -1,0 +1,9 @@
+# ldapadd -D cn=admin,dc=4chit,dc=at -W -f ldap_master_sync_add.ldif
+# PW: 123456
+
+# Account für Replikationsabfrage
+dn: cn=syncagent,dc=4chit,dc=at
+cn: syncagent
+objectClass: top
+objectClass: person
+sn: syncagent
