@@ -1,16 +1,31 @@
 %!TEX root=../document.tex
 
 \section{Einführung}
+(Die Einführung wurde geschrieben von Kevin Waldock)
 
+Dieses Protokoll befasst sich mit der Installation und Konfiguration von LDAP auf Ubuntu. 
 
 \subsection{Ziele}
-
+Nach dem Aufsetzen von OpenLDAP soll es möglich sein sich mithilfe von LDAP zu authentifizieren.
 
 \subsection{Voraussetzungen}
+Für dieses Aufgabe werden folgende Software benötigt:
 
+\begin{itemize}
+	\item VMware Workstation Pro 12 oder höher
+	\item Ubuntu 14.04 LTS
+\end{itemize}
 
 \subsection{Aufgabenstellung}
 
+In Gruppen von 2-3 Personen (die einzelnen Schritte müssen dokumentiert und getestet sein):
 
+\begin{itemize}
+	\item Installieren Sie zwei OpenLDAP Server
+	\item Konfigurieren Sie eine Master-Slave Replikation zwischen den beiden Servern
+	\item Erstellen Sie Accounts im LDAP für mindestens 2 Benutzer
+	\item Erstellen Sie im LDAP eine Benutzergruppe mit den zuvor angelegten Benutzern
+	\item Konfigurieren Sie ein Client-System für die Authentifizierung über LDAP  (entweder global oder nur für spezielle Services wie z.B. FTP oder SSH)
+\end{itemize}
 
 \clearpage
