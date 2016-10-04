@@ -1,0 +1,14 @@
+# Tex generated files
+*.log
+*.lof
+*.aux
+*.gz
+*.lot
+*.out
+*.bbl
+*.blg
+*.toc
+*.lol
+
+# Output
+*.pdf
