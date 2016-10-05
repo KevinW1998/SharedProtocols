@@ -27,3 +27,15 @@ Diese Datei beinhaltet den hostname des Betriebsystems. Da ersetzen wir den aktu
 
 Danach muss nur noch ein Neustart durchgeführt werden und der Hostname ist richtig konfiguriert.
 
+\subsubsection{Installation}
+Für die Installation von OpenLDAP wird das Terminal benötigt. Dann muss folgender Befehl ausgeführt werden:
+
+\verb|sudo apt-get install slapd ldap-utils|
+
+Slapd und ldap-utils bietet uns eine vollständige OpenLDAP-Installation. Beim Installieren wird nach dem Admin-Passwort gefragt. Wir haben dafür das Passwort ``123456'' verwendet.
+
+Der DN für den Admin-Account sollte nun \verb|cn=admin,dn=4chit,dn=at| lauten.
+Dies kann man mit dem Befehl nachschauen:
+\verb|ldapsearch -x -LLL -H ldap:/// -b dc=4chit,dc=at dn|
+
+\verb|ldap:///| bezieht sich auf den eigenen LDAP-Server.
