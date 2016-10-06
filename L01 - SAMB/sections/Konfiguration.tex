@@ -1,0 +1,73 @@
+%!TEX root=../document.tex
+\subsection{Authetifizierung über ssh}
+(Geschrieben von Dragana Sunaric)
+
+\subsubsection{LDAP-Legitimation}
+Die Installation des Packages \textit{libnss-ldap} wird empfohlen da es viele tools liefert die einem beim konfigurieren des Servers helfen. Installiert wird das Package mit dem Befehl:
+
+\verb|sudo apt install libnss-ldap|
+
+Falls Fehler bei der Konfiguration passieren kann man diese durch folgenden befehl rückgängig machen (wird eventuell nützlich sein vorallem wenn man wie in unserem Fall noch wenig erfahrung hat):
+
+\verb|sudo dpkg-reconfigure ldap-auth-config|
+
+Nun konfiguriert man das LDAP Profil für NSS:
+
+\verb|sudo auth-client-config -t nss -p lac_ldap|
+
+% what the actual fuck
+
+Um nun die User auch tatsächlich über ssh identifizieren zu können müssen wir zunächst den oped-ssh server installieren:
+
+\verb|sudo apt-get install openssh-server|
+
+% what the fuck 
+
+
+\begin{lstlisting}[caption=Usergruppe hinzufügen]
+dn: ou=People,dc=4chit,dc=at
+objectClass: organizationalUnit
+ou: People
+\end{lstlisting}
+
+hierbei haben wir die Usergruppe \textit{People} genannt und haben als domain den von uns zuvor gewählten \textit{domain-name}  \textit{4chit.at} geschrieben.
+
+Um in dieser Usergruppe nun auch User anzulegen müssen wir diese User wie folgt erstellen:
+
+\begin{lstlisting}[caption=User hinzufügen]
+dn: uid=dsunaric,ou=People,dc=4chit,dc=at
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: dsunaric
+sn: Draggy
+givenName: Dragana
+cn: Dragana.Sunaric
+displayName: Dragana Sunaric
+uidNumber: 10000
+gidNumber: 5000
+userPassword: 123456
+gecos: dsunaric
+loginShell: /bin/bash
+homeDirectory: /home/dsunaric
+\end{lstlisting}
+
+Hierbei haben wir wieder bei den Usergruppen unseren \textit{domain-name} und sonstige metadaten zum Benutzer angegeben (Wie zum Beispiel die Usergruppe).
+
+\textbf{Wichtig : es muss darauf geachtet werden, dass die uid und die uidNummer einzigartig ist}
+
+Neben dem obenstehenden User haben wir noch 2 weitere hinzugefügt.
+Das geschriebene File haben wir es unter dem Verzeichniss \textit{syt} unter dem Namen \textit{ldap\_4chit.ldif} gespeichert.
+
+Um es in den \textit{lDAP}-Verzeichnissdienst zu laden müssen wir nun folgendes in die Konsole eingeben: 
+\begin{center}
+	\includegraphics[width=1.0\linewidth]{images/a3_ldapadd.PNG}
+\end{center}
+
+Erfolgt die Ausgabe wie in unserem Beispiel verlief das Hinzufügen der Nutzer zumindest schon ohne Probleme.
+
+Zu testzwecken haben wir noch einen \textit{LDAP}-search Befehl ausgeführt um zu testen ob die User tatsächlich angelegt sind:
+
+\verb|ldapsearch -x -LLL -b dc=4chit,dc=at 'uid=dsunaric' cn gidNumber|
+
+Nachdem der Befehl ausgeführt wurde sollten 3 Zeilen ausgegebenen werden. In der Untersten steht die \textit{gidNumber} (das Attribut nach dem wir gefiltert haben)
