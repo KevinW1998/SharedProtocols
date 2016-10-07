@@ -2,6 +2,8 @@
 
 % PACKAGES
 \usepackage[ngerman]{datenumber}
+\usepackage{atbegshi,ifthen,listings,tikz}
+\usepackage{colortbl}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DEFINITIONS
@@ -48,6 +50,17 @@
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
 
+\tikzstyle{highlighter} = [
+lightgray,
+line width = \baselineskip,
+]
+\newcounter{highlight}[page]
+\newcommand{\tikzhighlightanchor}[1]{\ensuremath{\vcenter{\hbox{\tikz[remember picture, overlay]{\coordinate (#1 highlight \arabic{highlight});}}}}}
+\newcommand{\bh}[0]{\stepcounter{highlight}\tikzhighlightanchor{begin}}
+\newcommand{\eh}[0]{\tikzhighlightanchor{end}}
+\AtBeginShipout{\AtBeginShipoutUpperLeft{\ifthenelse{\value{highlight} > 0}{\tikz[remember picture, overlay]{\foreach \stroke in {1,...,\arabic{highlight}} \draw[highlighter] (begin highlight \stroke) -- (end highlight \stroke);}}{}}}
+
+
 \begin{document}
 \parindent 0pt
 \parskip 6pt
@@ -66,8 +79,10 @@
 %\vspace{-0.5cm}
 
 \input sections/task.tex
-\input sections/solution.tex
+\input sections/Installation.tex
 \input sections/Add_User_Usergroups.tex
+\input sections/Replikation.tex
+\input sections/Konfiguration.tex
 
 \clearpage
 
