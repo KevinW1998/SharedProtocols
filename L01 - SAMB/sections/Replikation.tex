@@ -13,16 +13,16 @@ Ziel ist die Verteilung des LDAP-Schema auf mehr als einem Server. Dies erhöht 
 	\includegraphics[width=0.75\linewidth]{images/a4_clonevirtualmachine.PNG}
 \end{center}
 
-Zunächst wird der eigene Domain-Name bzw ein eigener hostname eingerichtet sowie beim Master(der vorigen vm).Sie selbe Struktur des Domainnamen wird eingehalten.=> sunaric.4chit.at\\
-Damit der Name über DNS aufgelöst werden kann wird der Name und die die dazugehörige ipadresse der master-vm \textit{waldock} eingetragen.
+Zunächst wird der eigene Domain-Name bzw ein eigener hostname eingerichtet sowie beim Master(der vorigen vm).Die selbe Struktur des Domainnamen wird eingehalten => sunaric.4chit.at\\
+Damit der Name über DNS aufgelöst werden kann wird der Name und die dazugehörige ip-adresse der master-VM \textit{waldock} eingetragen.
 
-Der Hostname wird sowohl in der /etc/hosts als auch in /etc/hostname umgeändert so wie bei der  master-vm.
+Der Hostname wird sowohl in der /etc/hosts als auch in /etc/hostname umgeändert so wie bei der  Master-VM.
 \begin{center}
 	\includegraphics[width=1.0\linewidth]{images/a5_addmasterdns.PNG}
 \end{center}
 
 
-Hier wird überprüft ob der hostname walddock erstens aufgelöst werden kann und zweitens Zugriff auf die LDAP-Daten hat.
+Hier wird überprüft ob der Hostname \textit{walddock} erstens aufgelöst werden kann und zweitens Zugriff auf die LDAP-Daten hat.
 
 
 \begin{center}
@@ -100,7 +100,7 @@ objectClass: olcSyncProvConfig
 olcOverlay: syncprov
 \end{lstlisting}
 
-Hier wie man erkennen kann wird das auf der Client-vm \textit{kevsoft@sunaric } geändert.
+Wie man erkennen kann wird das auf der Client-VM \textit{kevsoft@sunaric } geändert.
 \begin{center}
 	\includegraphics[width=1.0\linewidth]{images/a9_config_slave_sync.PNG}
 \end{center}
