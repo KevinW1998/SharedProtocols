@@ -1,0 +1,27 @@
+%!TEX root=../document.tex
+\subsection{Authetifizierung über ssh}
+(Geschrieben von Dragana Sunaric)
+
+\subsubsection{LDAP-Legitimation}
+Die Installation des Packages \textit{libnss-ldap} wird empfohlen da es viele Tools liefert die einem beim Konfigurieren des Servers helfen. Installiert wird das Package mit dem Befehl:
+
+\verb|sudo apt install libnss-ldap|
+
+Falls Fehler bei der Konfiguration passieren kann man durch folgenden Befehl eine Neukonfiguration durchführen:
+
+\verb|sudo dpkg-reconfigure ldap-auth-config|
+
+Dieser Befehl wird auch bei der Erstkonfiguration ausgeführt. Anschließend wird nach einigen Einstellungen gefragt, wobei alle Standardwerte drinnen gelassen werden können (mit Ausnahme von dem Passwort welches in unserem Fall \textit{123456} lautet) 
+
+Nun konfiguriert man das LDAP Profil für NSS:
+
+\verb|sudo auth-client-config -t nss -p lac_ldap|
+
+Zuletzt muss folgender Befehl eingegeben werden um das gewünschte Authentifizierungs-System auszuwählen:
+
+\verb|sudo pam-auth-update|
+
+Um nun die User auch tatsächlich über SSH authentifizieren zu können, müssen wir zunächst den open-ssh server installieren. Dies kann in Linux mit folgendem Befehl gemacht werden:
+
+\verb|sudo apt-get install openssh-server|
+

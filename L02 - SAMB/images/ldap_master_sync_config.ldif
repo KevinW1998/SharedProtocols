@@ -1,0 +1,33 @@
+# ldapmodify -Y EXTERNAL -H ldapi:/// -f ldap_master_sync_config.ldif
+
+# Sync-Modul aktivieren
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: syncprov.la
+
+# fuege replikationsrelevante Attribute zum Index hinzu
+dn: olcDatabase={1}hdb,cn=config
+changetype: modify
+add: olcDbIndex
+olcDbIndex: entryUUID,entryCSN eq
+
+# Zugriffsrechte für den sync-Account anlegen
+dn: olcDatabase={0}config,cn=config
+changetype: modify
+add: olcAccess
+olcAccess: to * by dn.base="cn=syncagent,dc=4chit,dc=at" read by * +0 break
+
+# sync-Provider für die LDAP-Datenbank aktivieren
+dn: olcOverlay=syncprov,olcDatabase={1}hdb,cn=config
+changetype: add
+objectClass: olcOverlayConfig
+objectClass: olcSyncProvConfig
+olcOverlay: syncprov
+
+# sync-Provider für die LDAP-Konfiguration aktivieren
+dn: olcOverlay=syncprov,olcDatabase={0}config,cn=config
+changetype: add
+objectClass: olcOverlayConfig
+objectClass: olcSyncProvConfig
+olcOverlay: syncprov
