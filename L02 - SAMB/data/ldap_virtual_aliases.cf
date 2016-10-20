@@ -4,5 +4,5 @@ bind_pw = 123456
 server_host = ldap://127.0.0.1:389
 search_base = ou=people,dc=4chit,dc=at
 domain = 4chit.at
-query_filter = (&(mailAlias=%s)(mailEnabled=TRUE))
+query_filter = (&(mailAlias=%s))
 result_attribute = mail, email
