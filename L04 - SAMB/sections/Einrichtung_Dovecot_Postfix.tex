@@ -1,0 +1,43 @@
+%!TEX root=../document.tex
+
+\section{Ergebnisse}
+\label{sec:Ergebnisse}
+
+\subsection{Installation von Dovecot und Postfix}
+(Geschrieben von Kevin Waldock)
+
+\subsubsection{Vorbereitungen}
+Bevor die Installation von Dovcot und Postfix durchgeführt wird, sollte das System up-to-date sein.
+Daher sollten folgende Befehle zunächst ausgeführt werden:
+
+\verb|sudo -s|\newline
+\verb|apt update && apt upgrade|
+
+Als nächstes muss der Hostname der Maschine gesetzt werden. Dafür wird \verb|/etc/hostname| geändert mit dem folgenen Inhalt:
+
+\verb|syt|
+
+Parallel dazu, muss auch die hosts-Datei aktualisiert werden:
+\begin{lstlisting}[escapechar=@]
+127.0.1.1	syt.at syt
+127.0.0.1	localhost
+#127.0.1.1	mzaher
+
+# The following lines are desirable for IPv6 capable hosts
+::1 syt.at ip6-localhost 
+#::1     ip6-localhost ip6-loopback
+#fe00::0 ip6-localnet
+#ff00::0 ip6-mcastprefix
+#ff02::1 ip6-allnodes
+#ff02::2 ip6-allrouters
+\end{lstlisting}
+
+Anstatt \verb|mzaher| werden die hostnames \verb|syt.at| und \verb|syt| verwendet. Nach den Änderugen ist ein neustart der Maschine erforderlich.
+
+Beim Ausführen von \verb|hostname -f| sollte nun \verb|syt.at| ausgegeben werden.
+
+\subsubsection{Test-SSL-Zertifikat}
+Damit wir SSL verwenden können, müssten wir ein Zertifikat kaufen. Für diesen Testlauf generieren wir ein Test-SSL-Zertifikat mit dem Kommando \verb|sudo make-ssl-cert generate-default-snakeoil|. Fallst \verb|make-ssl-cert| nicht existiert, dann muss es noch installiert werden mit \newline\verb|sudo apt-get install ssl-cert|.
+
+Dadurch werden zwei Dateien erstellt
+

@@ -1,0 +1,25 @@
+In /etc/apt/sources.list
+# Additional Repos:  
+deb http://packages.dotdeb.org oldstable all
+deb-src http://packages.dotdeb.org oldstable all
+deb http://php53.dotdeb.org oldstable all
+deb-src http://php53.dotdeb.org oldstable all
+deb http://backports.debian.org/debian-backports lenny-backports main
+
+
+GPG keys:
+
+root@ubuntu:/etc/apt# gpg --keyserver keys.gnupg.net --recv-key 89DF5277
+gpg: keyring `/root/.gnupg/secring.gpg' created
+gpg: keyring `/root/.gnupg/pubring.gpg' created
+gpg: requesting key 89DF5277 from hkp server keys.gnupg.net
+gpg: key 89DF5277: public key "Guillaume Plessis <gui@dotdeb.org>" imported
+gpg: no ultimately trusted keys found
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+root@ubuntu:/etc/apt# gpg -a --export 89DF5277 | apt-key add -
+OK
+root@ubuntu:/etc/apt# gedit sources.list
+
+
+
