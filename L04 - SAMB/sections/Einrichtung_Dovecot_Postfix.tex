@@ -39,5 +39,131 @@ Beim Ausführen von \verb|hostname -f| sollte nun \verb|syt.at| ausgegeben werde
 \subsubsection{Test-SSL-Zertifikat}
 Damit wir SSL verwenden können, müssten wir ein Zertifikat kaufen. Für diesen Testlauf generieren wir ein Test-SSL-Zertifikat mit dem Kommando \verb|sudo make-ssl-cert generate-default-snakeoil|. Fallst \verb|make-ssl-cert| nicht existiert, dann muss es noch installiert werden mit \newline\verb|sudo apt-get install ssl-cert|.
 
-Dadurch werden zwei Dateien erstellt
+Dadurch werden zwei Dateien erstellt: \newline
+\verb|/etc/ssl/certs/ssl-cert-snakeoil.pem| \newline
+\verb|/etc/ssl/private/ssl-cert-snakeoil.key| \newline
+
+Diese werden dann bei der weiteren Konfiguration verwendet.
+
+\subsubsection{Installation der Packete}
+
+% TODO: Evtl. noch weiter Konfigurationsdetails?
+
+Für die Datenbank für Postfix wird mysql verwendet. Daher muss zunächst das MySQL-Package installiert werden:\newline
+\verb|sudo apt-get install mysql-server|
+
+Als nächstes werden die Dovecot-Packete installiert:\newline
+\verb|sudo apt-get install dovecot-core dovecot-imapd dovecot-lmtpd dovecot-mysql |\newline
+\verb|dovecot-sieve dovecot-managesieved dovecot-antispam|\newline
+
+Zum Schluss wird dann noch Postfix und die MySQL-Integration installiert: \newline
+\verb|sudo apt-get install postfix postfix-mysql|
+
+\subsubsection{Einrichten der MySQL Datenbank für Postfix}
+In Linux kann man sich mit der MySQL-Shell direkt mit seinem Root-Passwort anmelden. Dazu kann der Befehl:\newline
+\verb|mysql -u root -p|\newline
+verwendet werden.
+
+Wenn angemeldet, wird zunächst eine neue Datenbank erstellt:\newline
+\verb|create database vmail;|\newline
+\verb|vmail| ist die Datenbank, auf die dann Postfix zugreifen kann.
+
+Als nächstes muss ein User erstellt werden, mit welchem sich Postfix auf die Datenbank anmelden kann:\newline
+\verb|grant all on vmail.* to 'vmail'@'localhost' identified by '12345qwert';|\newline
+Das Passwort sollte entsprechen lang sein, um auch Sicherheit zu gewähren. In dieser Demonstration wurde nur das Passwort \verb|12345qwert| gewählt.
+
+\paragraph{Tabellen erstellen}\mbox{}\\
+Damit Postfix funktioniert, müssen die entsprechenden Tabellen erstellt werden, die dann die Konfigurations- und Benutzerdaten speichert.
+
+Dafür muss zunächst die Datenbank ausgewählt werden mit:\newline
+\verb|use vmail|\newline
+
+\subparagraph{Domain-Tabelle}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=vmail - Domain-Tabelle]
+CREATE TABLE `domains` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT,
+	`domain` varchar(255) NOT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY (`domain`)
+) CHARSET=latin1;
+\end{lstlisting}
+Diese Tabelle enthält alle Domains, die der Mailserver verwendet soll.
+
+\subparagraph{Account-Tabelle}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=vmail - Account-Tabelle]
+CREATE TABLE `accounts` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT,
+	`username` varchar(64) NOT NULL,
+	`domain` varchar(255) NOT NULL,
+	`password` varchar(255) NOT NULL,
+	`quota` int unsigned DEFAULT '0',
+	`enabled` boolean DEFAULT '0',
+	`sendonly` boolean DEFAULT '0',
+	PRIMARY KEY (id),
+	UNIQUE KEY (`username`, `domain`),
+	FOREIGN KEY (`domain`) REFERENCES `domains` (`domain`)
+) CHARSET=latin1;
+\end{lstlisting}
+Diese Tabelle repräsentiert alle Mailserver-Accounts.
+
+\subparagraph{Alias-Tabelle}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=vmail - Alias-Tabelle]
+CREATE TABLE `aliases` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT,
+	`source_username` varchar(64) NOT NULL,
+	`source_domain` varchar(255) NOT NULL,
+	`destination_username` varchar(64) NOT NULL,
+	`destination_domain` varchar(255) NOT NULL,
+	`enabled` boolean DEFAULT '0',
+	PRIMARY KEY (`id`),
+	UNIQUE KEY (`source_username`, `source_domain`, `destination_username`, `destination_domain`),
+	FOREIGN KEY (`source_domain`) REFERENCES `domains` (`domain`)
+) CHARSET=latin1;
+\end{lstlisting}
+Diese Tabelle repräsentiert alle Aliase. Damit können Weiterleitungen erstellt werden.
+
+\subparagraph{TLS Policy-Tabelle}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=vmail - Alias-Tabelle]
+CREATE TABLE `tlspolicies` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT,
+	`domain` varchar(255) NOT NULL,
+	`policy` enum('none', 'may', 'encrypt', 'dane', 'dane-only', 'fingerprint', 'verify', 'secure') NOT NULL,
+	`params` varchar(255),
+	PRIMARY KEY (`id`),
+	UNIQUE KEY (`domain`)
+) CHARSET=latin1;
+\end{lstlisting}
+Diese Tabelle bestimmt die Sicherheitsbeschränkungen.
+
+\subsubsection{Einrichtung der Benutzer und Verzeichnisse für Postfix}
+Postfix benötigt für den Zugriff auf MySQL eine eigenen Benutzer. Der Benutzer wird \verb|vmail| heißen, da dieser auch schon für MySQL konfiguriert wurde.
+
+Als Home-Verzeichnis wird \verb|/var/vmail| verwendet, wo dann alle Mailserver-Daten (E-Mails, Filter, ...) gespeichert werden. Daher muss zunächst dieser Ordner erstellt werden:\newline
+\verb|mkdir /var/vmail|\newline
+
+Als nächstes muss der Systembenutzer erstellt werden:\newline
+\verb|adduser --disabled-login --disabled-password --home /var/vmail vmail|\newline
+Wichtig ist, dass der richtige Home-Verzeichnis angegeben wird.
+
+Dann werden noch die übrigen Unterverzeichnisse erstellt:\newline
+\verb|mkdir /var/vmail/mailboxes|\newline
+\verb|mkdir -p /var/vmail/sieve/global|\newline
+
+Zum Schluss muss nur noch die Benutzerrechte für die Ordner angepasst werden, so dass auch \verb|vmail| auf diese Ordner zurgreifen kann.\newline
+\verb|chown -R vmail /var/vmail|\newline
+\verb|chgrp -R vmail /var/vmail|\newline
+\verb|chmod -R 770 /var/vmail|\newline
+
+
+
+
+
+
+
+
+
+
+\subsubsection{Quellen}
+\url{https://thomas-leister.de/mailserver-unter-ubuntu-16.04}
+
 
