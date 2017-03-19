@@ -155,11 +155,209 @@ Zum Schluss muss nur noch die Benutzerrechte für die Ordner angepasst werden, s
 \verb|chmod -R 770 /var/vmail|\newline
 
 
+\subsubsection{Einrichtung von Dovecot}
+Dovecot wird benötigt, damit Protokolle wie IMAP mit Postfix funktionieren.
+
+Für die Einrichtung muss zunächst Dovecot gestoppt werden:\newline
+\verb|systemctl stop dovecot|\newline
+
+Prinzipielle könnte man jetzt jede einzelne Konfiguratonsdatei editieren. Da Dovecot aber nur lediglich zwei Konfigurationsdateien braucht (dovecot.conf, dovecot-sql.conf), ist es besser die Konfigurationsorder zu entleeren, und dann mit den kommenden vorgefertigten Dateien zu arbeiten.
+s
+Um den Konfigurationsordner zu entleeren müssen folgende Befehle ausgeführt werden:\newline
+\verb|rm -r /etc/dovecot/*|\newline
+\verb|cd /etc/dovecot|\newline
+
+Jetzt können die Dateien erstellt werden.
+
+% TODO: Kürzen/Highlighting?
+\paragraph{dovecot.conf}\mbox{}\\
+\begin{lstlisting}[caption=dovecot.conf]
+###
+### Aktivierte Protokolle
+#############################
+
+protocols = imap lmtp sieve
 
 
 
+###
+### TLS Config
+#######################
+
+ssl = required
+ssl_cert = </etc/ssl/certs/ssl-cert-snakeoil.pem
+ssl_key = </etc/ssl/private/ssl-cert-snakeoil.key
+ssl_dh_parameters_length = 2048
+ssl_protocols = !SSLv2 !SSLv3
+ssl_cipher_list = EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+CAMELLIA128:+AES128:+SSLv3:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!DSS:!RC4:!SEED:!IDEA:!ECDSA:kEDH:CAMELLIA128-SHA:AES128-SHA
+ssl_prefer_server_ciphers = yes
 
 
+
+###
+### Dovecot services
+################################
+
+service imap-login {
+    inet_listener imap {
+        port = 143
+    }
+}
+
+
+service managesieve-login {
+    inet_listener sieve {
+        port = 4190
+    }
+}
+
+
+service lmtp {
+    unix_listener /var/spool/postfix/private/dovecot-lmtp {
+        mode = 0660
+        group = postfix
+        user = postfix
+    }
+
+    user = vmail
+}
+
+
+service auth {
+    ### Auth socket fuer Postfix
+    unix_listener /var/spool/postfix/private/auth {
+        mode = 0660
+        user = postfix
+        group = postfix
+    }
+
+    ### Auth socket fuer LMTP-Dienst
+    unix_listener auth-userdb {
+        mode = 0660
+        user = vmail
+        group = vmail
+    }
+}
+
+
+###
+###  Protocol settings
+#############################
+
+protocol imap {
+    mail_plugins = $mail_plugins quota imap_quota antispam
+    mail_max_userip_connections = 20
+    imap_idle_notify_interval = 29 mins
+}
+
+protocol lmtp {
+    postmaster_address = postmaster@syt.at #geaendert
+    mail_plugins = $mail_plugins sieve
+}
+
+
+
+###
+### Client authentication
+#############################
+
+disable_plaintext_auth = yes
+auth_mechanisms = plain login
+
+
+passdb {
+    driver = sql
+    args = /etc/dovecot/dovecot-sql.conf
+}
+
+userdb {
+    driver = sql
+    args = /etc/dovecot/dovecot-sql.conf
+}
+
+
+###
+### Mail location
+#######################
+
+mail_uid = vmail
+mail_gid = vmail
+mail_privileged_group = vmail
+
+
+mail_home = /var/vmail/mailboxes/%d/%n
+mail_location = maildir:~/mail:LAYOUT=fs
+
+
+
+###
+### Mailbox configuration
+########################################
+
+namespace inbox {
+    inbox = yes
+
+    mailbox Spam {
+        auto = subscribe
+        special_use = \Junk
+    }
+
+    mailbox Trash {
+        auto = subscribe
+        special_use = \Trash
+    }
+
+    mailbox Drafts {
+        auto = subscribe
+        special_use = \Drafts
+    }
+
+    mailbox Sent {
+        auto = subscribe
+        special_use = \Sent
+    }
+}
+
+
+
+###
+### Mail plugins
+############################
+
+
+plugin {
+    sieve_before = /var/vmail/sieve/global/spam-global.sieve   
+    sieve = /var/vmail/sieve/%d/%n/active-script.sieve
+    sieve_dir = /var/vmail/sieve/%d/%n/scripts
+
+    quota = maildir:User quota
+    quota_exceeded_message = Benutzer %u hat das Speichervolumen ueberschritten. / User %u has exhausted allowed storage space.
+
+    antispam_backend = pipe
+    antispam_spam = Spam
+    antispam_trash = Trash
+    antispam_pipe_program = /var/vmail/spampipe.sh
+    antispam_pipe_program_spam_arg = --spam
+    antispam_pipe_program_notspam_arg = --ham
+}
+\end{lstlisting}
+
+% TODO: Beschreibung?
+
+\paragraph{dovecot-sql.conf}\mbox{}\\
+\begin{lstlisting}[caption=dovecot-sql.conf]
+driver=mysql
+connect = "host=127.0.0.1 dbname=vmail user=vmail password=12345qwert"
+default_pass_scheme = PLAIN
+
+password_query = SELECT username AS user, domain, password FROM accounts WHERE username = '%n' AND domain = '%d' and enabled = true;
+
+user_query = SELECT concat('*:storage=', quota, 'M') AS quota_rule FROM accounts WHERE username = '%n' AND domain = '%d' AND sendonly = false;
+
+iterate_query = SELECT username, domain FROM accounts where sendonly = false;
+\end{lstlisting}
+
+Hier wird die Schnittstelle zwischen der MySQL-Datenbank und dovecot definiert. In Praxis sollte \verb|default_pass_scheme = PLAIN| nicht angewendet werden. Zur einfachen Einrichtung eines E-Mail-Clients bzw. zu Testzwecken wurde das Passwort-Schema auf \verb|PLAIN| gesetzt. 
 
 
 
