@@ -543,7 +543,7 @@ Als nächstes muss die ``master.cf'' angelegt werden, die die Definition und Kon
 # ==========================================================================
 
 ###
-### Postscreen-Service: Prüft eingehende SMTP-Verbindungen auf Spam-Server
+### Postscreen-Service: Prueft eingehende SMTP-Verbindungen auf Spam-Server
 ###
 smtp      inet  n       -       n       -       1       postscreen
 -o smtpd_sasl_auth_enable=no
@@ -553,7 +553,7 @@ smtp      inet  n       -       n       -       1       postscreen
 smtpd     pass  -       -       n       -       -       smtpd
 -o smtpd_sasl_auth_enable=no
 ###
-### dnsblog führt DNS-Abfragen für Blocklists durch
+### dnsblog fuehrt DNS-Abfragen fuer Blocklists durch
 ###
 dnsblog   unix  -       -       n       -       0       dnsblog
 ###
@@ -561,7 +561,7 @@ dnsblog   unix  -       -       n       -       0       dnsblog
 ###
 tlsproxy  unix  -       -       n       -       0       tlsproxy
 ###
-### Submission-Zugang für Clients: Für Mailclients gelten andere Regeln, als für andere Mailserver (siehe smtpd_ in main.cf)
+### Submission-Zugang fuer Clients: Fuer Mailclients gelten andere Regeln, als fuer andere Mailserver (siehe smtpd_ in main.cf)
 ###
 submission inet n       -       n       -       -       smtpd
 -o syslog_name=postfix/submission
@@ -579,7 +579,7 @@ submission inet n       -       n       -       -       smtpd
 -o milter_macro_daemon_name=ORIGINATING
 -o cleanup_service_name=submission-header-cleanup
 ###
-### Weitere wichtige Dienste für den Serverbetrieb
+### Weitere wichtige Dienste fuer den Serverbetrieb
 ###
 pickup    unix  n       -       n       60      1       pickup
 cleanup   unix  n       -       n       -       0       cleanup
@@ -607,6 +607,93 @@ scache    unix  -       -       n       -       1       scache
 submission-header-cleanup unix n - n    -       0       cleanup
 -o header_checks=regexp:/etc/postfix/submission_header_cleanup
 \end{lstlisting}
+
+Als nächstes muss in \verb|/etc/postfix| der Ordner \verb|sql| angelegt werden. Dazu kann man folgenden Befehl verwenden:\newline
+\verb|mkdir /etc/postfix/sql && cd /etc/postfix/sql/|\newline
+
+In diesem Ordner müssen mehrere Konfigurationsdateien erstellt werden:
+\begin{itemize}
+	\item accounts.cf
+	\item aliases.cf
+	\item domains.cf
+	\item recipient-access.cf
+	\item sender-login-maps.cf
+	\item tls-policy.cf
+\end{itemize}
+
+\subparagraph{accounts.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - accounts.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = select 1 as found from accounts where username = '%u' and domain = '%d' and enabled = true LIMIT 1;
+\end{lstlisting}
+Diese Tabelle enthält alle Domains, die der Mailserver verwendet soll.
+
+\subparagraph{aliases.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - aliases.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = select concat(destination_username, '@', destination_domain) as destinations from aliases where source_username = '%u' and source_domain = '%d' and enabled = true;
+\end{lstlisting}
+Diese Tabelle repräsentiert alle Mailserver-Accounts.
+
+\subparagraph{domains.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - domains.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = SELECT domain FROM domains WHERE domain='%s'
+\end{lstlisting}
+Diese Tabelle repräsentiert alle Aliase. Damit können Weiterleitungen erstellt werden.
+
+\subparagraph{recipient-access.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - recipient-access.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = select if(sendonly = true, 'REJECT', 'OK') AS access from accounts where username = '%u' and domain = '%d' and enabled = true LIMIT 1;
+\end{lstlisting}
+
+\subparagraph{sender-login-maps.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - sender-login-maps.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = select concat(username, '@', domain) as 'owns' from accounts where username = '%u' AND domain = '%d' and enabled = true union select concat(destination_username, '@', destination_domain) AS 'owns' from aliases where source_username = '%u' and source_domain = '%d' and enabled = true;
+\end{lstlisting}
+
+\subparagraph{tls-policy.cf}\mbox{}\\
+\begin{lstlisting}[language=SQL, caption=postfix - tls-policy.cf]
+user = vmail
+password = 12345qwert
+hosts = 127.0.0.1
+dbname = vmail
+query = SELECT policy, params FROM tlspolicies WHERE domain = '%s'
+\end{lstlisting}
+
+
+\subparagraph{Weitere Konfigurationsdateien}
+Außerdem müssen für Postfix noch weitere Konfigurationsdateien angelegt werden:
+
+\verb|touch /etc/postfix/without_ptr|\newline
+\verb|touch /etc/postfix/postscreen_access|\newline
+
+\verb|without_ptr| muss folgender Inhalt beinhalten:\newline
+\verb|1.2.3.3 OK|\newline
+
+
+
+
+
+
+
 
 
 
