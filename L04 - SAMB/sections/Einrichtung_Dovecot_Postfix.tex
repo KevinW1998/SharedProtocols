@@ -47,8 +47,6 @@ Diese werden dann bei der weiteren Konfiguration verwendet.
 
 \subsubsection{Installation der Packete}
 
-% TODO: Evtl. noch weiter Konfigurationsdetails?
-
 Für die Datenbank für Postfix wird mysql verwendet. Daher muss zunächst das MySQL-Package installiert werden:\newline
 \verb|sudo apt-get install mysql-server|
 
@@ -344,7 +342,13 @@ plugin {
 }
 \end{lstlisting}
 
-% TODO: Beschreibung?
+Einiges ist hier ziemlich gleich zur Default-Einstellung. Besonders hevorzuheben ist:\newline
+\verb|ssl = required|\newline
+\verb|ssl_cert = </etc/ssl/certs/ssl-cert-snakeoil.pem|\newline
+\verb|ssl_key = </etc/ssl/private/ssl-cert-snakeoil.key|\newline
+Wir benutzt unseren eigenes Zertifikat, dass wir selbst erstellt haben.
+
+Der Rest gibt an welche Mailboxen wir haben, welche Port wir benutzen und welche Plugins wir verwenden wollen.
 
 \paragraph{dovecot-sql.conf}\mbox{}\\
 \begin{lstlisting}[caption=dovecot-sql.conf]
@@ -678,23 +682,9 @@ dbname = vmail
 query = SELECT policy, params FROM tlspolicies WHERE domain = '%s'
 \end{lstlisting}
 
-
-\subparagraph{Weitere Konfigurationsdateien}
-Außerdem müssen für Postfix noch weitere Konfigurationsdateien angelegt werden:
-
-\verb|touch /etc/postfix/without_ptr|\newline
-\verb|touch /etc/postfix/postscreen_access|\newline
-
-\verb|without_ptr| muss folgender Inhalt beinhalten:\newline
-\verb|1.2.3.3 OK|\newline
-
-
-
-
-
-
-
-
+Jetzt alles neu starten, und der Mailserver sollte funktionieren:\newline
+\verb|systemctl start dovecot|\newline
+\verb|systemctl start postfix|\newline
 
 
 
